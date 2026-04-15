@@ -1,0 +1,26 @@
+{
+  "name": "hexo-canvas-doodle",
+  "version": "1.0.0",
+  "description": "A Hexo plugin that allows embedding a doodle canvas in articles with real-time saving",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "hexo",
+    "plugin",
+    "canvas",
+    "doodle",
+    "drawing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "hexo": ">=3.0.0"
+  },
+  "files": [
+    "index.js",
+    "lib/",
+    "assets/"
+  ]
+}

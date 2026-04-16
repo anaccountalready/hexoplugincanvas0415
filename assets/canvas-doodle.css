@@ -23,6 +23,49 @@
   flex-wrap: wrap;
 }
 
+.hexo-canvas-control-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.hexo-canvas-label {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+.hexo-canvas-color-picker {
+  width: 40px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  background: none;
+}
+
+.hexo-canvas-color-picker:hover {
+  border-color: #888;
+}
+
+.hexo-canvas-line-width {
+  width: 80px;
+  height: 5px;
+  cursor: pointer;
+  accent-color: #4a90d9;
+}
+
+.hexo-canvas-line-width-value {
+  font-size: 12px;
+  color: #666;
+  min-width: 30px;
+}
+
 .hexo-canvas-btn {
   padding: 8px 16px;
   border: none;
@@ -40,6 +83,11 @@
 
 .hexo-canvas-btn:active {
   background-color: #2d6aa3;
+}
+
+.hexo-canvas-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 .hexo-canvas-clear {
@@ -66,10 +114,56 @@
   background-color: #d68910;
 }
 
+.hexo-canvas-zoom-controls .hexo-canvas-btn {
+  padding: 5px 10px;
+  font-size: 14px;
+  min-width: 30px;
+}
+
+.hexo-canvas-zoom-level {
+  font-size: 13px;
+  color: #555;
+  min-width: 45px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.hexo-canvas-pan-controls .hexo-canvas-btn {
+  padding: 5px 8px;
+  font-size: 12px;
+  min-width: 28px;
+}
+
+.hexo-canvas-text-controls {
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.hexo-canvas-text-input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  flex-grow: 1;
+  max-width: 200px;
+  transition: border-color 0.2s;
+}
+
+.hexo-canvas-text-input:focus {
+  outline: none;
+  border-color: #4a90d9;
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+}
+
+.hexo-canvas-text-input::placeholder {
+  color: #999;
+}
+
 .hexo-canvas-status {
   font-size: 14px;
   color: #666;
   margin-left: 10px;
+  min-width: 100px;
 }
 
 .hexo-canvas-status.success {
@@ -78,4 +172,29 @@
 
 .hexo-canvas-status.error {
   color: #e74c3c;
+}
+
+@media (max-width: 768px) {
+  .hexo-canvas-doodle-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .hexo-canvas-control-group {
+    justify-content: center;
+  }
+  
+  .hexo-canvas-text-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .hexo-canvas-text-input {
+    max-width: none;
+  }
+  
+  .hexo-canvas-status {
+    text-align: center;
+    margin-left: 0;
+  }
 }

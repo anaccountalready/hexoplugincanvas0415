@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hexo Canvas Doodle - 功能测试</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .test-section {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .test-section h2 {
+      color: #4a90d9;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .test-section p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+    .feature-list {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .feature-list h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #555;
+    }
+    .feature-list ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .feature-list li {
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 Hexo Canvas Doodle - 新功能测试</h1>
+  
+  <div class="test-section">
+    <h2>📋 测试功能列表</h2>
+    <div class="feature-list">
+      <h3>功能一：颜色选择器</h3>
+      <ul>
+        <li>点击颜色选择器，选择不同颜色</li>
+        <li>在画布上绘画，验证颜色是否生效</li>
+      </ul>
+    </div>
+    <div class="feature-list">
+      <h3>功能二：画笔大小调整</h3>
+      <ul>
+        <li>拖动滑块调整画笔大小（1-20px）</li>
+        <li>在画布上绘画，验证线条粗细变化</li>
+      </ul>
+    </div>
+    <div class="feature-list">
+      <h3>功能三：画布缩放</h3>
+      <ul>
+        <li>点击 "+" 按钮放大画布（最大300%）</li>
+        <li>点击 "-" 按钮缩小画布（最小30%）</li>
+        <li>点击 "重置" 按钮恢复原始大小</li>
+      </ul>
+    </div>
+    <div class="feature-list">
+      <h3>功能四：画布移动</h3>
+      <ul>
+        <li>点击方向按钮（↑↓←→）移动画布</li>
+        <li>结合缩放功能测试更大范围的绘制</li>
+      </ul>
+    </div>
+    <div class="feature-list">
+      <h3>功能五：添加文本</h3>
+      <ul>
+        <li>在文本框中输入文字</li>
+        <li>点击 "添加文本" 按钮</li>
+        <li>点击画布上任意位置放置文本</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>🖌️ 测试画布</h2>
+    <p>请在下方画布上测试所有新功能：</p>
+    
+    <div class="hexo-canvas-doodle-container" data-canvas-id="test-canvas">
+      <canvas id="test-canvas" width="800" height="400" class="hexo-canvas-doodle"></canvas>
+      <div class="hexo-canvas-doodle-controls">
+        <div class="hexo-canvas-control-group">
+          <label class="hexo-canvas-label">画笔颜色:</label>
+          <input type="color" class="hexo-canvas-color-picker" data-canvas-id="test-canvas" value="#000000">
+        </div>
+        <div class="hexo-canvas-control-group">
+          <label class="hexo-canvas-label">画笔大小:</label>
+          <input type="range" class="hexo-canvas-line-width" data-canvas-id="test-canvas" min="1" max="20" value="3">
+          <span class="hexo-canvas-line-width-value" data-canvas-id="test-canvas">3px</span>
+        </div>
+        <button class="hexo-canvas-btn hexo-canvas-clear" data-canvas-id="test-canvas">清除</button>
+        <button class="hexo-canvas-btn hexo-canvas-save" data-canvas-id="test-canvas">保存</button>
+        <button class="hexo-canvas-btn hexo-canvas-load" data-canvas-id="test-canvas">加载</button>
+        <div class="hexo-canvas-control-group hexo-canvas-zoom-controls">
+          <label class="hexo-canvas-label">缩放:</label>
+          <button class="hexo-canvas-btn hexo-canvas-zoom-out" data-canvas-id="test-canvas">-</button>
+          <span class="hexo-canvas-zoom-level" data-canvas-id="test-canvas">100%</span>
+          <button class="hexo-canvas-btn hexo-canvas-zoom-in" data-canvas-id="test-canvas">+</button>
+          <button class="hexo-canvas-btn hexo-canvas-zoom-reset" data-canvas-id="test-canvas">重置</button>
+        </div>
+        <div class="hexo-canvas-control-group hexo-canvas-pan-controls">
+          <label class="hexo-canvas-label">移动:</label>
+          <button class="hexo-canvas-btn hexo-canvas-pan-up" data-canvas-id="test-canvas">↑</button>
+          <button class="hexo-canvas-btn hexo-canvas-pan-down" data-canvas-id="test-canvas">↓</button>
+          <button class="hexo-canvas-btn hexo-canvas-pan-left" data-canvas-id="test-canvas">←</button>
+          <button class="hexo-canvas-btn hexo-canvas-pan-right" data-canvas-id="test-canvas">→</button>
+        </div>
+        <div class="hexo-canvas-control-group hexo-canvas-text-controls">
+          <label class="hexo-canvas-label">文本:</label>
+          <input type="text" class="hexo-canvas-text-input" data-canvas-id="test-canvas" placeholder="输入文本...">
+          <button class="hexo-canvas-btn hexo-canvas-add-text" data-canvas-id="test-canvas">添加文本</button>
+        </div>
+        <span class="hexo-canvas-status" data-canvas-id="test-canvas"></span>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    (function() {
+      'use strict';
+      
+      const canvases = {};
+      
+      function initCanvas(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas || canvases[canvasId]) return;
+        
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let strokeColor = '#000000';
+        let lineWidth = 3;
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isAddingText = false;
+        let textToAdd = '';
+        
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.font = '16px Arial';
+        ctx.fillStyle = strokeColor;
+        
+        function getPosition(e) {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          
+          let clientX, clientY;
+          if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+          } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+          }
+          
+          const canvasX = (clientX - rect.left) * scaleX;
+          const canvasY = (clientY - rect.top) * scaleY;
+          
+          return {
+            x: (canvasX - offsetX) / scale,
+            y: (canvasY - offsetY) / scale
+          };
+        }
+        
+        function startDrawing(e) {
+          e.preventDefault();
+          
+          if (isAddingText && textToAdd) {
+            const pos = getPosition(e);
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(scale, scale);
+            ctx.fillStyle = strokeColor;
+            ctx.font = Math.max(12, lineWidth * 4) + 'px Arial';
+            ctx.fillText(textToAdd, pos.x, pos.y);
+            ctx.restore();
+            isAddingText = false;
+            textToAdd = '';
+            canvas.style.cursor = 'crosshair';
+            showStatus(canvasId, '文本已添加！', 'success');
+            return;
+          }
+          
+          isDrawing = true;
+          const pos = getPosition(e);
+          lastX = pos.x;
+          lastY = pos.y;
+        }
+        
+        function draw(e) {
+          if (!isDrawing) return;
+          e.preventDefault();
+          
+          const pos = getPosition(e);
+          
+          ctx.save();
+          ctx.translate(offsetX, offsetY);
+          ctx.scale(scale, scale);
+          ctx.beginPath();
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth = lineWidth;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          ctx.restore();
+          
+          lastX = pos.x;
+          lastY = pos.y;
+        }
+        
+        function stopDrawing() {
+          isDrawing = false;
+        }
+        
+        function updateZoomLevel() {
+          const zoomLevelEl = document.querySelector('.hexo-canvas-zoom-level[data-canvas-id="' + canvasId + '"]');
+          if (zoomLevelEl) {
+            zoomLevelEl.textContent = Math.round(scale * 100) + '%';
+          }
+        }
+        
+        function zoomIn() {
+          if (scale < 3) {
+            scale *= 1.2;
+            updateZoomLevel();
+            showStatus(canvasId, '已放大', '');
+          }
+        }
+        
+        function zoomOut() {
+          if (scale > 0.3) {
+            scale /= 1.2;
+            updateZoomLevel();
+            showStatus(canvasId, '已缩小', '');
+          }
+        }
+        
+        function zoomReset() {
+          scale = 1;
+          offsetX = 0;
+          offsetY = 0;
+          updateZoomLevel();
+          showStatus(canvasId, '缩放已重置', '');
+        }
+        
+        function panUp() {
+          offsetY += 50;
+          showStatus(canvasId, '已向上移动', '');
+        }
+        
+        function panDown() {
+          offsetY -= 50;
+          showStatus(canvasId, '已向下移动', '');
+        }
+        
+        function panLeft() {
+          offsetX += 50;
+          showStatus(canvasId, '已向左移动', '');
+        }
+        
+        function panRight() {
+          offsetX -= 50;
+          showStatus(canvasId, '已向右移动', '');
+        }
+        
+        function setColor(color) {
+          strokeColor = color;
+        }
+        
+        function setLineWidth(width) {
+          lineWidth = width;
+          const widthValueEl = document.querySelector('.hexo-canvas-line-width-value[data-canvas-id="' + canvasId + '"]');
+          if (widthValueEl) {
+            widthValueEl.textContent = width + 'px';
+          }
+        }
+        
+        function prepareAddText() {
+          const textInput = document.querySelector('.hexo-canvas-text-input[data-canvas-id="' + canvasId + '"]');
+          if (textInput) {
+            const text = textInput.value.trim();
+            if (text) {
+              isAddingText = true;
+              textToAdd = text;
+              showStatus(canvasId, '点击画布添加文本: ' + text, '');
+              canvas.style.cursor = 'text';
+            } else {
+              showStatus(canvasId, '请先输入文本内容', 'error');
+            }
+          }
+        }
+        
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+        
+        canvases[canvasId] = {
+          canvas: canvas,
+          ctx: ctx,
+          getState: function() {
+            return {
+              strokeColor: strokeColor,
+              lineWidth: lineWidth,
+              scale: scale,
+              offsetX: offsetX,
+              offsetY: offsetY
+            };
+          },
+          setState: function(state) {
+            if (state.strokeColor) strokeColor = state.strokeColor;
+            if (state.lineWidth) lineWidth = state.lineWidth;
+            if (state.scale) scale = state.scale;
+            if (state.offsetX !== undefined) offsetX = state.offsetX;
+            if (state.offsetY !== undefined) offsetY = state.offsetY;
+            updateZoomLevel();
+          }
+        };
+        
+        window.HexoCanvasDoodleAPI = window.HexoCanvasDoodleAPI || {};
+        window.HexoCanvasDoodleAPI[canvasId] = {
+          setColor: setColor,
+          setLineWidth: setLineWidth,
+          zoomIn: zoomIn,
+          zoomOut: zoomOut,
+          zoomReset: zoomReset,
+          panUp: panUp,
+          panDown: panDown,
+          panLeft: panLeft,
+          panRight: panRight,
+          prepareAddText: prepareAddText
+        };
+        
+        loadCanvas(canvasId);
+      }
+      
+      function saveCanvas(canvasId) {
+        const canvasData = canvases[canvasId];
+        if (!canvasData) return false;
+        
+        try {
+          const dataURL = canvasData.canvas.toDataURL('image/png');
+          localStorage.setItem('hexo-canvas-' + canvasId, dataURL);
+          
+          const state = canvasData.getState();
+          localStorage.setItem('hexo-canvas-state-' + canvasId, JSON.stringify(state));
+          
+          showStatus(canvasId, '保存成功！', 'success');
+          return true;
+        } catch (e) {
+          showStatus(canvasId, '保存失败：' + e.message, 'error');
+          return false;
+        }
+      }
+      
+      function loadCanvas(canvasId) {
+        const canvasData = canvases[canvasId];
+        if (!canvasData) return false;
+        
+        try {
+          const dataURL = localStorage.getItem('hexo-canvas-' + canvasId);
+          if (!dataURL) {
+            showStatus(canvasId, '暂无保存的内容', '');
+            return false;
+          }
+          
+          const stateStr = localStorage.getItem('hexo-canvas-state-' + canvasId);
+          if (stateStr) {
+            try {
+              const state = JSON.parse(stateStr);
+              canvasData.setState(state);
+            } catch (e) {
+              console.error('Failed to parse canvas state:', e);
+            }
+          }
+          
+          const img = new Image();
+          img.onload = function() {
+            canvasData.ctx.clearRect(0, 0, canvasData.canvas.width, canvasData.canvas.height);
+            canvasData.ctx.drawImage(img, 0, 0);
+            showStatus(canvasId, '加载成功！', 'success');
+          };
+          img.onerror = function() {
+            showStatus(canvasId, '加载失败：图片格式错误', 'error');
+          };
+          img.src = dataURL;
+          return true;
+        } catch (e) {
+          showStatus(canvasId, '加载失败：' + e.message, 'error');
+          return false;
+        }
+      }
+      
+      function clearCanvas(canvasId) {
+        const canvasData = canvases[canvasId];
+        if (!canvasData) return false;
+        
+        try {
+          canvasData.ctx.clearRect(0, 0, canvasData.canvas.width, canvasData.canvas.height);
+          showStatus(canvasId, '画布已清除', '');
+          return true;
+        } catch (e) {
+          showStatus(canvasId, '清除失败：' + e.message, 'error');
+          return false;
+        }
+      }
+      
+      function showStatus(canvasId, message, type) {
+        const statusEl = document.querySelector('.hexo-canvas-status[data-canvas-id="' + canvasId + '"]');
+        if (statusEl) {
+          statusEl.textContent = message;
+          statusEl.className = 'hexo-canvas-status';
+          if (type) {
+            statusEl.classList.add(type);
+          }
+          
+          setTimeout(function() {
+            if (statusEl.textContent === message) {
+              statusEl.textContent = '';
+              statusEl.className = 'hexo-canvas-status';
+            }
+          }, 3000);
+        }
+      }
+      
+      function initAllCanvases() {
+        const canvasElements = document.querySelectorAll('.hexo-canvas-doodle');
+        canvasElements.forEach(function(canvas) {
+          if (canvas.id) {
+            initCanvas(canvas.id);
+          }
+        });
+      }
+      
+      document.addEventListener('click', function(e) {
+        const target = e.target;
+        
+        if (target.classList.contains('hexo-canvas-clear')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          clearCanvas(canvasId);
+        }
+        
+        if (target.classList.contains('hexo-canvas-save')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          saveCanvas(canvasId);
+        }
+        
+        if (target.classList.contains('hexo-canvas-load')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          loadCanvas(canvasId);
+        }
+        
+        if (target.classList.contains('hexo-canvas-zoom-in')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].zoomIn();
+          }
+        }
+        
+        if (target.classList.contains('hexo-canvas-zoom-out')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].zoomOut();
+          }
+        }
+        
+        if (target.classList.contains('hexo-canvas-zoom-reset')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].zoomReset();
+          }
+        }
+        
+        if (target.classList.contains('hexo-canvas-pan-up')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].panUp();
+          }
+        }
+        
+        if (target.classList.contains('hexo-canvas-pan-down')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].panDown();
+          }
+        }
+        
+        if (target.classList.contains('hexo-canvas-pan-left')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].panLeft();
+          }
+        }
+        
+        if (target.classList.contains('hexo-canvas-pan-right')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].panRight();
+          }
+        }
+        
+        if (target.classList.contains('hexo-canvas-add-text')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].prepareAddText();
+          }
+        }
+      });
+      
+      document.addEventListener('input', function(e) {
+        const target = e.target;
+        
+        if (target.classList.contains('hexo-canvas-color-picker')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].setColor(target.value);
+          }
+        }
+        
+        if (target.classList.contains('hexo-canvas-line-width')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].setLineWidth(parseInt(target.value));
+          }
+        }
+      });
+      
+      document.addEventListener('change', function(e) {
+        const target = e.target;
+        
+        if (target.classList.contains('hexo-canvas-color-picker')) {
+          const canvasId = target.getAttribute('data-canvas-id');
+          if (window.HexoCanvasDoodleAPI && window.HexoCanvasDoodleAPI[canvasId]) {
+            window.HexoCanvasDoodleAPI[canvasId].setColor(target.value);
+          }
+        }
+      });
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAllCanvases);
+      } else {
+        initAllCanvases();
+      }
+      
+      window.HexoCanvasDoodle = {
+        save: saveCanvas,
+        load: loadCanvas,
+        clear: clearCanvas,
+        init: initCanvas
+      };
+    })();
+  </script>
+  
+  <style>
+    .hexo-canvas-doodle-container {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+
+    .hexo-canvas-doodle {
+      display: block;
+      border: 2px solid #333;
+      border-radius: 4px;
+      background-color: #fff;
+      cursor: crosshair;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .hexo-canvas-doodle-controls {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hexo-canvas-control-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background-color: #fff;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
+    .hexo-canvas-label {
+      font-size: 14px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .hexo-canvas-color-picker {
+      width: 40px;
+      height: 30px;
+      padding: 2px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      background: none;
+    }
+
+    .hexo-canvas-color-picker:hover {
+      border-color: #888;
+    }
+
+    .hexo-canvas-line-width {
+      width: 80px;
+      height: 5px;
+      cursor: pointer;
+      accent-color: #4a90d9;
+    }
+
+    .hexo-canvas-line-width-value {
+      font-size: 12px;
+      color: #666;
+      min-width: 30px;
+    }
+
+    .hexo-canvas-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4a90d9;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .hexo-canvas-btn:hover {
+      background-color: #357abd;
+    }
+
+    .hexo-canvas-btn:active {
+      background-color: #2d6aa3;
+    }
+
+    .hexo-canvas-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .hexo-canvas-clear {
+      background-color: #e74c3c;
+    }
+
+    .hexo-canvas-clear:hover {
+      background-color: #c0392b;
+    }
+
+    .hexo-canvas-save {
+      background-color: #27ae60;
+    }
+
+    .hexo-canvas-save:hover {
+      background-color: #219a52;
+    }
+
+    .hexo-canvas-load {
+      background-color: #f39c12;
+    }
+
+    .hexo-canvas-load:hover {
+      background-color: #d68910;
+    }
+
+    .hexo-canvas-zoom-controls .hexo-canvas-btn {
+      padding: 5px 10px;
+      font-size: 14px;
+      min-width: 30px;
+    }
+
+    .hexo-canvas-zoom-level {
+      font-size: 13px;
+      color: #555;
+      min-width: 45px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .hexo-canvas-pan-controls .hexo-canvas-btn {
+      padding: 5px 8px;
+      font-size: 12px;
+      min-width: 28px;
+    }
+
+    .hexo-canvas-text-controls {
+      flex-grow: 1;
+      min-width: 200px;
+    }
+
+    .hexo-canvas-text-input {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      flex-grow: 1;
+      max-width: 200px;
+      transition: border-color 0.2s;
+    }
+
+    .hexo-canvas-text-input:focus {
+      outline: none;
+      border-color: #4a90d9;
+      box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+    }
+
+    .hexo-canvas-text-input::placeholder {
+      color: #999;
+    }
+
+    .hexo-canvas-status {
+      font-size: 14px;
+      color: #666;
+      margin-left: 10px;
+      min-width: 100px;
+    }
+
+    .hexo-canvas-status.success {
+      color: #27ae60;
+    }
+
+    .hexo-canvas-status.error {
+      color: #e74c3c;
+    }
+
+    @media (max-width: 768px) {
+      .hexo-canvas-doodle-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .hexo-canvas-control-group {
+        justify-content: center;
+      }
+      
+      .hexo-canvas-text-controls {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .hexo-canvas-text-input {
+        max-width: none;
+      }
+      
+      .hexo-canvas-status {
+        text-align: center;
+        margin-left: 0;
+      }
+    }
+  </style>
+</body>
+</html>

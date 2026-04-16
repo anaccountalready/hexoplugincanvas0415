@@ -35,7 +35,9 @@ ${jsContent}
   const canvasHtml = `
 ${resourcesHtml}
 <div class="hexo-canvas-doodle-container" data-canvas-id="${canvasId}">
-  <canvas id="${canvasId}" width="${width}" height="${height}" class="hexo-canvas-doodle"></canvas>
+  <div class="hexo-canvas-viewport">
+    <canvas id="${canvasId}" width="${width}" height="${height}" class="hexo-canvas-doodle"></canvas>
+  </div>
   <div class="hexo-canvas-doodle-controls">
     <div class="hexo-canvas-control-group">
       <label class="hexo-canvas-label">画笔颜色:</label>

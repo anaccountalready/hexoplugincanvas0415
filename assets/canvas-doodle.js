@@ -7,29 +7,39 @@
     const canvas = document.getElementById(canvasId);
     if (!canvas || canvases[canvasId]) return;
     
+    const container = canvas.closest('.hexo-canvas-doodle-container');
     const ctx = canvas.getContext('2d');
+    
     let isDrawing = false;
-    let lastX = 0;
-    let lastY = 0;
+    let lastCanvasX = 0;
+    let lastCanvasY = 0;
+    
+    let isPanning = false;
+    let lastPanScreenX = 0;
+    let lastPanScreenY = 0;
+    
+    let spaceKeyPressed = false;
+    
+    let cameraX = 0;
+    let cameraY = 0;
+    let cameraZoom = 1;
+    
     let strokeColor = '#000000';
     let lineWidth = 3;
-    let scale = 1;
-    let offsetX = 0;
-    let offsetY = 0;
     let isAddingText = false;
     let textToAdd = '';
     
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = lineWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.font = '16px Arial';
-    ctx.fillStyle = strokeColor;
     
-    function getPosition(e) {
+    function applyCameraTransform() {
+      canvas.style.transformOrigin = '0 0';
+      canvas.style.transform = `translate(${cameraX}px, ${cameraY}px) scale(${cameraZoom})`;
+    }
+    
+    function getMousePositionOnCanvas(e) {
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
       
       let clientX, clientY;
       if (e.touches && e.touches.length > 0) {
@@ -40,114 +50,225 @@
         clientY = e.clientY;
       }
       
-      const canvasX = (clientX - rect.left) * scaleX;
-      const canvasY = (clientY - rect.top) * scaleY;
+      const relativeX = clientX - rect.left;
+      const relativeY = clientY - rect.top;
       
-      return {
-        x: (canvasX - offsetX) / scale,
-        y: (canvasY - offsetY) / scale
-      };
+      const canvasX = (relativeX - cameraX) / cameraZoom;
+      const canvasY = (relativeY - cameraY) / cameraZoom;
+      
+      return { x: canvasX, y: canvasY };
+    }
+    
+    function updateZoomLevel() {
+      const zoomLevelEl = document.querySelector(`.hexo-canvas-zoom-level[data-canvas-id="${canvasId}"]`);
+      if (zoomLevelEl) {
+        zoomLevelEl.textContent = Math.round(cameraZoom * 100) + '%';
+      }
+    }
+    
+    function updateCursor() {
+      if (isPanning) {
+        canvas.style.cursor = 'grabbing';
+      } else if (isAddingText) {
+        canvas.style.cursor = 'text';
+      } else if (spaceKeyPressed) {
+        canvas.style.cursor = 'grab';
+      } else {
+        canvas.style.cursor = 'crosshair';
+      }
     }
     
     function startDrawing(e) {
       e.preventDefault();
       
       if (isAddingText && textToAdd) {
-        const pos = getPosition(e);
+        const pos = getMousePositionOnCanvas(e);
+        
         ctx.save();
-        ctx.translate(offsetX, offsetY);
-        ctx.scale(scale, scale);
         ctx.fillStyle = strokeColor;
         ctx.font = `${Math.max(12, lineWidth * 4)}px Arial`;
         ctx.fillText(textToAdd, pos.x, pos.y);
         ctx.restore();
+        
         isAddingText = false;
         textToAdd = '';
+        updateCursor();
         showStatus(canvasId, '文本已添加！', 'success');
         return;
       }
       
-      isDrawing = true;
-      const pos = getPosition(e);
-      lastX = pos.x;
-      lastY = pos.y;
+      if (e.button === 1 || (e.button === 0 && spaceKeyPressed)) {
+        isPanning = true;
+        
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+        
+        lastPanScreenX = clientX;
+        lastPanScreenY = clientY;
+        updateCursor();
+        return;
+      }
+      
+      if (e.button === 0) {
+        isDrawing = true;
+        const pos = getMousePositionOnCanvas(e);
+        lastCanvasX = pos.x;
+        lastCanvasY = pos.y;
+      }
     }
     
     function draw(e) {
-      if (!isDrawing) return;
       e.preventDefault();
       
-      const pos = getPosition(e);
+      if (isPanning) {
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+        
+        const deltaX = clientX - lastPanScreenX;
+        const deltaY = clientY - lastPanScreenY;
+        
+        cameraX += deltaX;
+        cameraY += deltaY;
+        
+        lastPanScreenX = clientX;
+        lastPanScreenY = clientY;
+        
+        applyCameraTransform();
+        updateZoomLevel();
+        return;
+      }
+      
+      if (!isDrawing) return;
+      
+      const pos = getMousePositionOnCanvas(e);
       
       ctx.save();
-      ctx.translate(offsetX, offsetY);
-      ctx.scale(scale, scale);
       ctx.beginPath();
       ctx.strokeStyle = strokeColor;
       ctx.lineWidth = lineWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.moveTo(lastX, lastY);
+      ctx.moveTo(lastCanvasX, lastCanvasY);
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
       ctx.restore();
       
-      lastX = pos.x;
-      lastY = pos.y;
+      lastCanvasX = pos.x;
+      lastCanvasY = pos.y;
     }
     
-    function stopDrawing() {
+    function stopDrawing(e) {
+      if (isPanning) {
+        isPanning = false;
+        updateCursor();
+        return;
+      }
+      
       isDrawing = false;
     }
     
-    function updateZoomLevel() {
-      const zoomLevelEl = document.querySelector(`.hexo-canvas-zoom-level[data-canvas-id="${canvasId}"]`);
-      if (zoomLevelEl) {
-        zoomLevelEl.textContent = Math.round(scale * 100) + '%';
+    function handleWheel(e) {
+      e.preventDefault();
+      
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const worldX = (mouseX - cameraX) / cameraZoom;
+      const worldY = (mouseY - cameraY) / cameraZoom;
+      
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newZoom = Math.max(0.1, Math.min(10, cameraZoom + delta));
+      
+      if (newZoom !== cameraZoom) {
+        cameraZoom = newZoom;
+        
+        cameraX = mouseX - worldX * cameraZoom;
+        cameraY = mouseY - worldY * cameraZoom;
+        
+        applyCameraTransform();
+        updateZoomLevel();
       }
     }
     
     function zoomIn() {
-      if (scale < 3) {
-        scale *= 1.2;
-        updateZoomLevel();
-        showStatus(canvasId, '已放大', '');
-      }
+      const rect = canvas.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const worldX = (centerX - cameraX) / cameraZoom;
+      const worldY = (centerY - cameraY) / cameraZoom;
+      
+      cameraZoom = Math.min(10, cameraZoom * 1.2);
+      
+      cameraX = centerX - worldX * cameraZoom;
+      cameraY = centerY - worldY * cameraZoom;
+      
+      applyCameraTransform();
+      updateZoomLevel();
+      showStatus(canvasId, '已放大', '');
     }
     
     function zoomOut() {
-      if (scale > 0.3) {
-        scale /= 1.2;
-        updateZoomLevel();
-        showStatus(canvasId, '已缩小', '');
-      }
+      const rect = canvas.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const worldX = (centerX - cameraX) / cameraZoom;
+      const worldY = (centerY - cameraY) / cameraZoom;
+      
+      cameraZoom = Math.max(0.1, cameraZoom / 1.2);
+      
+      cameraX = centerX - worldX * cameraZoom;
+      cameraY = centerY - worldY * cameraZoom;
+      
+      applyCameraTransform();
+      updateZoomLevel();
+      showStatus(canvasId, '已缩小', '');
     }
     
     function zoomReset() {
-      scale = 1;
-      offsetX = 0;
-      offsetY = 0;
+      cameraZoom = 1;
+      cameraX = 0;
+      cameraY = 0;
+      applyCameraTransform();
       updateZoomLevel();
       showStatus(canvasId, '缩放已重置', '');
     }
     
     function panUp() {
-      offsetY += 50;
+      cameraY += 50;
+      applyCameraTransform();
       showStatus(canvasId, '已向上移动', '');
     }
     
     function panDown() {
-      offsetY -= 50;
+      cameraY -= 50;
+      applyCameraTransform();
       showStatus(canvasId, '已向下移动', '');
     }
     
     function panLeft() {
-      offsetX += 50;
+      cameraX += 50;
+      applyCameraTransform();
       showStatus(canvasId, '已向左移动', '');
     }
     
     function panRight() {
-      offsetX -= 50;
+      cameraX -= 50;
+      applyCameraTransform();
       showStatus(canvasId, '已向右移动', '');
     }
     
@@ -171,7 +292,7 @@
           isAddingText = true;
           textToAdd = text;
           showStatus(canvasId, '点击画布添加文本: ' + text, '');
-          canvas.style.cursor = 'text';
+          updateCursor();
         } else {
           showStatus(canvasId, '请先输入文本内容', 'error');
         }
@@ -183,9 +304,38 @@
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseout', stopDrawing);
     
-    canvas.addEventListener('touchstart', startDrawing, { passive: false });
-    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    
+    canvas.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1) {
+        startDrawing(e);
+      }
+    }, { passive: false });
+    
+    canvas.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 1) {
+        draw(e);
+      }
+    }, { passive: false });
+    
     canvas.addEventListener('touchend', stopDrawing);
+    
+    document.addEventListener('keydown', function(e) {
+      if (e.code === 'Space' && !spaceKeyPressed) {
+        e.preventDefault();
+        spaceKeyPressed = true;
+        updateCursor();
+      }
+    });
+    
+    document.addEventListener('keyup', function(e) {
+      if (e.code === 'Space') {
+        spaceKeyPressed = false;
+        if (!isPanning) {
+          updateCursor();
+        }
+      }
+    });
     
     canvases[canvasId] = {
       canvas: canvas,
@@ -194,17 +344,32 @@
         return {
           strokeColor: strokeColor,
           lineWidth: lineWidth,
-          scale: scale,
-          offsetX: offsetX,
-          offsetY: offsetY
+          cameraX: cameraX,
+          cameraY: cameraY,
+          cameraZoom: cameraZoom
         };
       },
       setState: function(state) {
         if (state.strokeColor) strokeColor = state.strokeColor;
         if (state.lineWidth) lineWidth = state.lineWidth;
-        if (state.scale) scale = state.scale;
-        if (state.offsetX !== undefined) offsetX = state.offsetX;
-        if (state.offsetY !== undefined) offsetY = state.offsetY;
+        if (state.cameraZoom !== undefined) cameraZoom = state.cameraZoom;
+        if (state.cameraX !== undefined) cameraX = state.cameraX;
+        if (state.cameraY !== undefined) cameraY = state.cameraY;
+        applyCameraTransform();
+        updateZoomLevel();
+      },
+      getCameraState: function() {
+        return {
+          x: cameraX,
+          y: cameraY,
+          zoom: cameraZoom
+        };
+      },
+      setCameraState: function(x, y, zoom) {
+        cameraX = x;
+        cameraY = y;
+        cameraZoom = zoom;
+        applyCameraTransform();
         updateZoomLevel();
       }
     };
@@ -223,6 +388,7 @@
       prepareAddText: prepareAddText
     };
     
+    applyCameraTransform();
     loadCanvas(canvasId);
   }
   
@@ -231,11 +397,17 @@
     if (!canvasData) return false;
     
     try {
+      const camera = canvasData.getCameraState();
+      
+      canvasData.setCameraState(0, 0, 1);
+      
       const dataURL = canvasData.canvas.toDataURL('image/png');
       localStorage.setItem('hexo-canvas-' + canvasId, dataURL);
       
       const state = canvasData.getState();
       localStorage.setItem('hexo-canvas-state-' + canvasId, JSON.stringify(state));
+      
+      canvasData.setCameraState(camera.x, camera.y, camera.zoom);
       
       showStatus(canvasId, '保存成功！', 'success');
       return true;
@@ -268,8 +440,13 @@
       
       const img = new Image();
       img.onload = function() {
+        const camera = canvasData.getCameraState();
+        canvasData.setCameraState(0, 0, 1);
+        
         canvasData.ctx.clearRect(0, 0, canvasData.canvas.width, canvasData.canvas.height);
         canvasData.ctx.drawImage(img, 0, 0);
+        
+        canvasData.setCameraState(camera.x, camera.y, camera.zoom);
         showStatus(canvasId, '加载成功！', 'success');
       };
       img.onerror = function() {
@@ -288,7 +465,12 @@
     if (!canvasData) return false;
     
     try {
+      const camera = canvasData.getCameraState();
+      canvasData.setCameraState(0, 0, 1);
+      
       canvasData.ctx.clearRect(0, 0, canvasData.canvas.width, canvasData.canvas.height);
+      
+      canvasData.setCameraState(camera.x, camera.y, camera.zoom);
       showStatus(canvasId, '画布已清除', '');
       return true;
     } catch (e) {

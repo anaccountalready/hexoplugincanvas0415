@@ -15,6 +15,28 @@
   background-color: #fff;
 }
 
+.hexo-canvas-minimap {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  border: 2px solid #555;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.hexo-canvas-minimap:hover {
+  opacity: 1;
+  border-color: #4a90d9;
+}
+
+.hexo-canvas-minimap:active {
+  cursor: grabbing;
+}
+
 .hexo-canvas-doodle {
   display: block;
   cursor: crosshair;

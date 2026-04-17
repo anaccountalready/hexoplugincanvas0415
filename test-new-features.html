@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hexo Canvas Doodle - 无限画布和迷你地图测试</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .test-section {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .test-section h2 {
+      color: #4a90d9;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .test-section p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+    .feature-list {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .feature-list h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #555;
+    }
+    .feature-list ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .feature-list li {
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #666;
+    }
+    .tip-box {
+      background-color: #e7f3ff;
+      border-left: 4px solid #4a90d9;
+      padding: 10px 15px;
+      margin-bottom: 15px;
+      border-radius: 0 4px 4px 0;
+    }
+    .tip-box p {
+      margin: 0;
+      color: #2d6aa3;
+    }
+    .important-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 10px 15px;
+      margin-bottom: 15px;
+      border-radius: 0 4px 4px 0;
+    }
+    .important-box p {
+      margin: 0;
+      color: #856404;
+    }
+  </style>
+  
+  <link rel="stylesheet" href="assets/canvas-doodle.css">
+</head>
+<body>
+  <h1>🎨 Hexo Canvas Doodle - 新功能测试</h1>
+  
+  <div class="test-section">
+    <h2>📋 新增功能列表</h2>
+    
+    <div class="tip-box">
+      <p><strong>💡 提示：</strong> 本次更新新增了<strong>无限画布</strong>和<strong>迷你地图导航</strong>两大功能！</p>
+    </div>
+    
+    <div class="feature-list">
+      <h3>✨ 功能一：无限画布（动态扩展）</h3>
+      <ul>
+        <li><strong>不再受固定尺寸限制</strong>：画布可以无限扩展，无论画到哪里都有空间</li>
+        <li><strong>智能边界检测</strong>：当绘制接近当前画布边界时，自动扩展画布尺寸</li>
+        <li><strong>双倍扩展策略</strong>：每次扩展时将画布尺寸翻倍，确保流畅体验</li>
+        <li><strong>支持负坐标</strong>：可以向左和向上绘制到负坐标区域</li>
+      </ul>
+    </div>
+    
+    <div class="feature-list">
+      <h3>🗺️ 功能二：迷你地图导航</h3>
+      <ul>
+        <li><strong>实时缩略图</strong>：画布右下角显示迷你地图，实时展示所有绘制内容</li>
+        <li><strong>视口指示器</strong>：红色矩形表示当前可见区域在整个画布中的位置</li>
+        <li><strong>点击定位</strong>：点击迷你地图任意位置，画布视图自动跳转到对应位置</li>
+        <li><strong>拖拽导航</strong>：在迷你地图上拖拽可以快速浏览整个画布</li>
+        <li><strong>智能边界</strong>：迷你地图只显示有内容的区域，自动忽略空白区域</li>
+      </ul>
+    </div>
+    
+    <div class="important-box">
+      <p><strong>⚠️ 测试说明：</strong> 请在下方画布上测试以下场景：</p>
+      <p>1. 在画布边缘绘制，观察画布是否自动扩展</p>
+      <p>2. 绘制多个分散的图形，观察迷你地图的显示</p>
+      <p>3. 点击迷你地图的不同位置，验证定位功能</p>
+      <p>4. 缩放和平移画布，观察迷你地图中的视口指示器变化</p>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>🖌️ 测试画布</h2>
+    <p>请在下方画布上测试所有新功能：</p>
+    
+    <div class="hexo-canvas-doodle-container" data-canvas-id="test-canvas-new">
+      <div class="hexo-canvas-viewport" style="width: 800px; max-width: 100%;">
+        <canvas id="test-canvas-new" width="800" height="400" class="hexo-canvas-doodle"></canvas>
+      </div>
+      <div class="hexo-canvas-doodle-controls">
+        <div class="hexo-canvas-control-group">
+          <label class="hexo-canvas-label">画笔颜色:</label>
+          <input type="color" class="hexo-canvas-color-picker" data-canvas-id="test-canvas-new" value="#000000">
+        </div>
+        <div class="hexo-canvas-control-group">
+          <label class="hexo-canvas-label">画笔大小:</label>
+          <input type="range" class="hexo-canvas-line-width" data-canvas-id="test-canvas-new" min="1" max="20" value="3">
+          <span class="hexo-canvas-line-width-value" data-canvas-id="test-canvas-new">3px</span>
+        </div>
+        <button class="hexo-canvas-btn hexo-canvas-clear" data-canvas-id="test-canvas-new">清除</button>
+        <button class="hexo-canvas-btn hexo-canvas-save" data-canvas-id="test-canvas-new">保存</button>
+        <button class="hexo-canvas-btn hexo-canvas-load" data-canvas-id="test-canvas-new">加载</button>
+        <div class="hexo-canvas-control-group hexo-canvas-zoom-controls">
+          <label class="hexo-canvas-label">缩放:</label>
+          <button class="hexo-canvas-btn hexo-canvas-zoom-out" data-canvas-id="test-canvas-new">-</button>
+          <span class="hexo-canvas-zoom-level" data-canvas-id="test-canvas-new">100%</span>
+          <button class="hexo-canvas-btn hexo-canvas-zoom-in" data-canvas-id="test-canvas-new">+</button>
+          <button class="hexo-canvas-btn hexo-canvas-zoom-reset" data-canvas-id="test-canvas-new">重置</button>
+        </div>
+        <div class="hexo-canvas-control-group hexo-canvas-pan-controls">
+          <label class="hexo-canvas-label">移动:</label>
+          <button class="hexo-canvas-btn hexo-canvas-pan-up" data-canvas-id="test-canvas-new">↑</button>
+          <button class="hexo-canvas-btn hexo-canvas-pan-down" data-canvas-id="test-canvas-new">↓</button>
+          <button class="hexo-canvas-btn hexo-canvas-pan-left" data-canvas-id="test-canvas-new">←</button>
+          <button class="hexo-canvas-btn hexo-canvas-pan-right" data-canvas-id="test-canvas-new">→</button>
+        </div>
+        <div class="hexo-canvas-control-group hexo-canvas-text-controls">
+          <label class="hexo-canvas-label">文本:</label>
+          <input type="text" class="hexo-canvas-text-input" data-canvas-id="test-canvas-new" placeholder="输入文本...">
+          <button class="hexo-canvas-btn hexo-canvas-add-text" data-canvas-id="test-canvas-new">添加文本</button>
+        </div>
+        <span class="hexo-canvas-status" data-canvas-id="test-canvas-new"></span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="test-section">
+    <h2>📝 操作指南</h2>
+    
+    <div class="feature-list">
+      <h3>🎨 基础操作</h3>
+      <ul>
+        <li><strong>绘制</strong>：鼠标左键拖拽</li>
+        <li><strong>平移画布</strong>：按住鼠标中键拖拽，或按住空格键+左键拖拽</li>
+        <li><strong>缩放画布</strong>：鼠标滚轮，或点击 +/- 按钮</li>
+        <li><strong>添加文本</strong>：输入文本后点击"添加文本"按钮，然后点击画布放置</li>
+      </ul>
+    </div>
+    
+    <div class="feature-list">
+      <h3>🗺️ 迷你地图操作</h3>
+      <ul>
+        <li><strong>查看缩略图</strong>：画布右下角的迷你地图显示所有绘制内容</li>
+        <li><strong>红色矩形</strong>：表示当前可见区域</li>
+        <li><strong>点击定位</strong>：点击迷你地图任意位置跳转到对应区域</li>
+        <li><strong>拖拽导航</strong>：在迷你地图上拖拽快速浏览</li>
+      </ul>
+    </div>
+    
+    <div class="feature-list">
+      <h3>♾️ 无限画布特性</h3>
+      <ul>
+        <li><strong>向右/向下绘制</strong>：画布自动扩展，无需担心边界</li>
+        <li><strong>向左/向上绘制</strong>：支持负坐标区域，同样自动扩展</li>
+        <li><strong>保存/加载</strong>：保存时只裁剪有内容的区域，加载时自动居中</li>
+      </ul>
+    </div>
+  </div>
+  
+  <script src="assets/canvas-doodle.js"></script>
+</body>
+</html>

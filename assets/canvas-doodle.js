@@ -2,12 +2,16 @@
   'use strict';
   
   const canvases = {};
+  const INFINITE_CANVAS_BASE_SIZE = 2000;
+  const MINIMAP_SIZE = 150;
+  const MINIMAP_PADDING = 10;
   
   function initCanvas(canvasId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas || canvases[canvasId]) return;
     
     const container = canvas.closest('.hexo-canvas-doodle-container');
+    const viewport = canvas.closest('.hexo-canvas-viewport');
     const ctx = canvas.getContext('2d');
     
     let isDrawing = false;
@@ -29,6 +33,24 @@
     let isAddingText = false;
     let textToAdd = '';
     
+    let offscreenCanvas = document.createElement('canvas');
+    let offscreenCtx = offscreenCanvas.getContext('2d');
+    let contentMinX = 0;
+    let contentMinY = 0;
+    let contentMaxX = 0;
+    let contentMaxY = 0;
+    let hasContent = false;
+    
+    let minimapCanvas = null;
+    let minimapCtx = null;
+    let isMinimapDragging = false;
+    
+    offscreenCanvas.width = INFINITE_CANVAS_BASE_SIZE;
+    offscreenCanvas.height = INFINITE_CANVAS_BASE_SIZE;
+    offscreenCtx.lineCap = 'round';
+    offscreenCtx.lineJoin = 'round';
+    offscreenCtx.font = '16px Arial';
+    
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.font = '16px Arial';
@@ -36,6 +58,265 @@
     function applyCameraTransform() {
       canvas.style.transformOrigin = '0 0';
       canvas.style.transform = `translate(${cameraX}px, ${cameraY}px) scale(${cameraZoom})`;
+      updateMinimap();
+    }
+    
+    function ensureCanvasSize(x, y) {
+      const padding = 500;
+      let needsResize = false;
+      let newOffsetX = 0;
+      let newOffsetY = 0;
+      
+      if (x < -padding || x > offscreenCanvas.width + padding ||
+          y < -padding || y > offscreenCanvas.height + padding) {
+        needsResize = true;
+      }
+      
+      if (!needsResize) return { offsetX: 0, offsetY: 0 };
+      
+      const currentWidth = offscreenCanvas.width;
+      const currentHeight = offscreenCanvas.height;
+      const newWidth = currentWidth * 2;
+      const newHeight = currentHeight * 2;
+      
+      if (x < 0) newOffsetX = currentWidth;
+      if (y < 0) newOffsetY = currentHeight;
+      
+      const newOffscreen = document.createElement('canvas');
+      newOffscreen.width = newWidth;
+      newOffscreen.height = newHeight;
+      const newCtx = newOffscreen.getContext('2d');
+      
+      newCtx.lineCap = 'round';
+      newCtx.lineJoin = 'round';
+      newCtx.font = '16px Arial';
+      
+      newCtx.drawImage(offscreenCanvas, newOffsetX, newOffsetY);
+      
+      offscreenCanvas = newOffscreen;
+      offscreenCtx = newCtx;
+      
+      contentMinX += newOffsetX;
+      contentMaxX += newOffsetX;
+      contentMinY += newOffsetY;
+      contentMaxY += newOffsetY;
+      
+      return { offsetX: newOffsetX, offsetY: newOffsetY };
+    }
+    
+    function updateContentBounds(x, y) {
+      const expandedX = x + lineWidth;
+      const expandedY = y + lineWidth;
+      
+      if (!hasContent) {
+        contentMinX = expandedX;
+        contentMinY = expandedY;
+        contentMaxX = expandedX;
+        contentMaxY = expandedY;
+        hasContent = true;
+      } else {
+        contentMinX = Math.min(contentMinX, expandedX);
+        contentMinY = Math.min(contentMinY, expandedY);
+        contentMaxX = Math.max(contentMaxX, expandedX);
+        contentMaxY = Math.max(contentMaxY, expandedY);
+      }
+    }
+    
+    function syncToDisplayCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const viewportWidth = rect.width;
+      const viewportHeight = rect.height;
+      
+      const visibleMinX = (-cameraX) / cameraZoom;
+      const visibleMinY = (-cameraY) / cameraZoom;
+      const visibleMaxX = visibleMinX + viewportWidth / cameraZoom;
+      const visibleMaxY = visibleMinY + viewportHeight / cameraZoom;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const srcX = Math.max(0, Math.floor(visibleMinX));
+      const srcY = Math.max(0, Math.floor(visibleMinY));
+      const srcWidth = Math.min(offscreenCanvas.width - srcX, Math.ceil(visibleMaxX - visibleMinX) + 1);
+      const srcHeight = Math.min(offscreenCanvas.height - srcY, Math.ceil(visibleMaxY - visibleMinY) + 1);
+      
+      if (srcWidth > 0 && srcHeight > 0 && srcX < offscreenCanvas.width && srcY < offscreenCanvas.height) {
+        const destX = srcX * cameraZoom + cameraX;
+        const destY = srcY * cameraZoom + cameraY;
+        const destWidth = srcWidth * cameraZoom;
+        const destHeight = srcHeight * cameraZoom;
+        
+        ctx.drawImage(
+          offscreenCanvas,
+          srcX, srcY, srcWidth, srcHeight,
+          destX, destY, destWidth, destHeight
+        );
+      }
+    }
+    
+    function initMinimap() {
+      if (!viewport) return;
+      
+      const existingMinimap = viewport.querySelector('.hexo-canvas-minimap');
+      if (existingMinimap) {
+        minimapCanvas = existingMinimap;
+        minimapCtx = minimapCanvas.getContext('2d');
+        return;
+      }
+      
+      minimapCanvas = document.createElement('canvas');
+      minimapCanvas.className = 'hexo-canvas-minimap';
+      minimapCanvas.width = MINIMAP_SIZE;
+      minimapCanvas.height = MINIMAP_SIZE;
+      minimapCanvas.style.position = 'absolute';
+      minimapCanvas.style.bottom = MINIMAP_PADDING + 'px';
+      minimapCanvas.style.right = MINIMAP_PADDING + 'px';
+      minimapCanvas.style.border = '1px solid #333';
+      minimapCanvas.style.backgroundColor = '#fff';
+      minimapCanvas.style.cursor = 'pointer';
+      minimapCanvas.style.zIndex = '10';
+      minimapCanvas.style.borderRadius = '4px';
+      
+      viewport.appendChild(minimapCanvas);
+      minimapCtx = minimapCanvas.getContext('2d');
+      
+      minimapCanvas.addEventListener('mousedown', handleMinimapMouseDown);
+      minimapCanvas.addEventListener('mousemove', handleMinimapMouseMove);
+      minimapCanvas.addEventListener('mouseup', handleMinimapMouseUp);
+      minimapCanvas.addEventListener('mouseout', handleMinimapMouseUp);
+    }
+    
+    function getContentBounds() {
+      if (!hasContent) {
+        return {
+          minX: 0,
+          minY: 0,
+          maxX: offscreenCanvas.width,
+          maxY: offscreenCanvas.height
+        };
+      }
+      
+      const padding = 100;
+      return {
+        minX: Math.max(0, contentMinX - padding),
+        minY: Math.max(0, contentMinY - padding),
+        maxX: Math.min(offscreenCanvas.width, contentMaxX + padding),
+        maxY: Math.min(offscreenCanvas.height, contentMaxY + padding)
+      };
+    }
+    
+    function updateMinimap() {
+      if (!minimapCanvas || !minimapCtx) return;
+      
+      const bounds = getContentBounds();
+      const contentWidth = bounds.maxX - bounds.minX;
+      const contentHeight = bounds.maxY - bounds.minY;
+      
+      if (contentWidth <= 0 || contentHeight <= 0) return;
+      
+      const scale = Math.min(MINIMAP_SIZE / contentWidth, MINIMAP_SIZE / contentHeight);
+      const offsetX = (MINIMAP_SIZE - contentWidth * scale) / 2;
+      const offsetY = (MINIMAP_SIZE - contentHeight * scale) / 2;
+      
+      minimapCtx.fillStyle = '#f8f9fa';
+      minimapCtx.fillRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
+      
+      minimapCtx.save();
+      minimapCtx.beginPath();
+      minimapCtx.rect(offsetX, offsetY, contentWidth * scale, contentHeight * scale);
+      minimapCtx.clip();
+      
+      const srcX = bounds.minX;
+      const srcY = bounds.minY;
+      const srcWidth = contentWidth;
+      const srcHeight = contentHeight;
+      const destX = offsetX;
+      const destY = offsetY;
+      const destWidth = contentWidth * scale;
+      const destHeight = contentHeight * scale;
+      
+      minimapCtx.drawImage(
+        offscreenCanvas,
+        srcX, srcY, srcWidth, srcHeight,
+        destX, destY, destWidth, destHeight
+      );
+      
+      minimapCtx.restore();
+      
+      minimapCtx.strokeStyle = '#666';
+      minimapCtx.lineWidth = 1;
+      minimapCtx.strokeRect(offsetX, offsetY, contentWidth * scale, contentHeight * scale);
+      
+      const rect = canvas.getBoundingClientRect();
+      const viewportWidth = rect.width;
+      const viewportHeight = rect.height;
+      
+      const vpMinX = (-cameraX) / cameraZoom;
+      const vpMinY = (-cameraY) / cameraZoom;
+      const vpMaxX = vpMinX + viewportWidth / cameraZoom;
+      const vpMaxY = vpMinY + viewportHeight / cameraZoom;
+      
+      const vpDisplayMinX = (vpMinX - bounds.minX) * scale + offsetX;
+      const vpDisplayMinY = (vpMinY - bounds.minY) * scale + offsetY;
+      const vpDisplayWidth = (vpMaxX - vpMinX) * scale;
+      const vpDisplayHeight = (vpMaxY - vpMinY) * scale;
+      
+      minimapCtx.strokeStyle = '#e74c3c';
+      minimapCtx.lineWidth = 2;
+      minimapCtx.strokeRect(
+        Math.max(offsetX, vpDisplayMinX),
+        Math.max(offsetY, vpDisplayMinY),
+        Math.min(contentWidth * scale, vpDisplayWidth),
+        Math.min(contentHeight * scale, vpDisplayHeight)
+      );
+    }
+    
+    function handleMinimapMouseDown(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      isMinimapDragging = true;
+      navigateMinimap(e);
+    }
+    
+    function handleMinimapMouseMove(e) {
+      if (!isMinimapDragging) return;
+      e.preventDefault();
+      e.stopPropagation();
+      navigateMinimap(e);
+    }
+    
+    function handleMinimapMouseUp(e) {
+      isMinimapDragging = false;
+    }
+    
+    function navigateMinimap(e) {
+      if (!minimapCanvas) return;
+      
+      const rect = minimapCanvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const bounds = getContentBounds();
+      const contentWidth = bounds.maxX - bounds.minX;
+      const contentHeight = bounds.maxY - bounds.minY;
+      
+      if (contentWidth <= 0 || contentHeight <= 0) return;
+      
+      const scale = Math.min(MINIMAP_SIZE / contentWidth, MINIMAP_SIZE / contentHeight);
+      const offsetX = (MINIMAP_SIZE - contentWidth * scale) / 2;
+      const offsetY = (MINIMAP_SIZE - contentHeight * scale) / 2;
+      
+      const worldX = (mouseX - offsetX) / scale + bounds.minX;
+      const worldY = (mouseY - offsetY) / scale + bounds.minY;
+      
+      const viewportRect = canvas.getBoundingClientRect();
+      const viewportWidth = viewportRect.width;
+      const viewportHeight = viewportRect.height;
+      
+      cameraX = -(worldX - (viewportWidth / 2 / cameraZoom)) * cameraZoom;
+      cameraY = -(worldY - (viewportHeight / 2 / cameraZoom)) * cameraZoom;
+      
+      applyCameraTransform();
+      syncToDisplayCanvas();
     }
     
     function getMousePositionOnCanvas(e) {
@@ -84,11 +365,17 @@
       if (isAddingText && textToAdd) {
         const pos = getMousePositionOnCanvas(e);
         
-        ctx.save();
-        ctx.fillStyle = strokeColor;
-        ctx.font = `${Math.max(12, lineWidth * 4)}px Arial`;
-        ctx.fillText(textToAdd, pos.x, pos.y);
-        ctx.restore();
+        ensureCanvasSize(pos.x, pos.y);
+        
+        offscreenCtx.save();
+        offscreenCtx.fillStyle = strokeColor;
+        offscreenCtx.font = `${Math.max(12, lineWidth * 4)}px Arial`;
+        offscreenCtx.fillText(textToAdd, pos.x, pos.y);
+        offscreenCtx.restore();
+        
+        updateContentBounds(pos.x, pos.y);
+        syncToDisplayCanvas();
+        updateMinimap();
         
         isAddingText = false;
         textToAdd = '';
@@ -146,6 +433,7 @@
         lastPanScreenY = clientY;
         
         applyCameraTransform();
+        syncToDisplayCanvas();
         updateZoomLevel();
         return;
       }
@@ -154,16 +442,24 @@
       
       const pos = getMousePositionOnCanvas(e);
       
-      ctx.save();
-      ctx.beginPath();
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = lineWidth;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.moveTo(lastCanvasX, lastCanvasY);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-      ctx.restore();
+      ensureCanvasSize(pos.x, pos.y);
+      ensureCanvasSize(lastCanvasX, lastCanvasY);
+      
+      offscreenCtx.save();
+      offscreenCtx.beginPath();
+      offscreenCtx.strokeStyle = strokeColor;
+      offscreenCtx.lineWidth = lineWidth;
+      offscreenCtx.lineCap = 'round';
+      offscreenCtx.lineJoin = 'round';
+      offscreenCtx.moveTo(lastCanvasX, lastCanvasY);
+      offscreenCtx.lineTo(pos.x, pos.y);
+      offscreenCtx.stroke();
+      offscreenCtx.restore();
+      
+      updateContentBounds(lastCanvasX, lastCanvasY);
+      updateContentBounds(pos.x, pos.y);
+      
+      syncToDisplayCanvas();
       
       lastCanvasX = pos.x;
       lastCanvasY = pos.y;
@@ -217,6 +513,7 @@
       cameraY = centerY - worldY * cameraZoom;
       
       applyCameraTransform();
+      syncToDisplayCanvas();
       updateZoomLevel();
       showStatus(canvasId, '已放大', '');
     }
@@ -235,6 +532,7 @@
       cameraY = centerY - worldY * cameraZoom;
       
       applyCameraTransform();
+      syncToDisplayCanvas();
       updateZoomLevel();
       showStatus(canvasId, '已缩小', '');
     }
@@ -244,6 +542,7 @@
       cameraX = 0;
       cameraY = 0;
       applyCameraTransform();
+      syncToDisplayCanvas();
       updateZoomLevel();
       showStatus(canvasId, '缩放已重置', '');
     }
@@ -251,24 +550,28 @@
     function panUp() {
       cameraY += 50;
       applyCameraTransform();
+      syncToDisplayCanvas();
       showStatus(canvasId, '已向上移动', '');
     }
     
     function panDown() {
       cameraY -= 50;
       applyCameraTransform();
+      syncToDisplayCanvas();
       showStatus(canvasId, '已向下移动', '');
     }
     
     function panLeft() {
       cameraX += 50;
       applyCameraTransform();
+      syncToDisplayCanvas();
       showStatus(canvasId, '已向左移动', '');
     }
     
     function panRight() {
       cameraX -= 50;
       applyCameraTransform();
+      syncToDisplayCanvas();
       showStatus(canvasId, '已向右移动', '');
     }
     
@@ -340,6 +643,8 @@
     canvases[canvasId] = {
       canvas: canvas,
       ctx: ctx,
+      offscreenCanvas: offscreenCanvas,
+      offscreenCtx: offscreenCtx,
       getState: function() {
         return {
           strokeColor: strokeColor,
@@ -356,6 +661,7 @@
         if (state.cameraX !== undefined) cameraX = state.cameraX;
         if (state.cameraY !== undefined) cameraY = state.cameraY;
         applyCameraTransform();
+        syncToDisplayCanvas();
         updateZoomLevel();
       },
       getCameraState: function() {
@@ -370,7 +676,17 @@
         cameraY = y;
         cameraZoom = zoom;
         applyCameraTransform();
+        syncToDisplayCanvas();
         updateZoomLevel();
+      },
+      updateContentBounds: function(x, y) {
+        updateContentBounds(x, y);
+      },
+      syncToDisplayCanvas: function() {
+        syncToDisplayCanvas();
+      },
+      updateMinimap: function() {
+        updateMinimap();
       }
     };
     
@@ -388,7 +704,9 @@
       prepareAddText: prepareAddText
     };
     
+    initMinimap();
     applyCameraTransform();
+    syncToDisplayCanvas();
     loadCanvas(canvasId);
   }
   
@@ -397,17 +715,36 @@
     if (!canvasData) return false;
     
     try {
-      const camera = canvasData.getCameraState();
+      const bounds = getContentBoundsForCanvas(canvasId);
+      const padding = 50;
+      const saveWidth = Math.max(1, bounds.maxX - bounds.minX + padding * 2);
+      const saveHeight = Math.max(1, bounds.maxY - bounds.minY + padding * 2);
       
-      canvasData.setCameraState(0, 0, 1);
+      const saveCanvas = document.createElement('canvas');
+      saveCanvas.width = saveWidth;
+      saveCanvas.height = saveHeight;
+      const saveCtx = saveCanvas.getContext('2d');
       
-      const dataURL = canvasData.canvas.toDataURL('image/png');
+      saveCtx.fillStyle = '#ffffff';
+      saveCtx.fillRect(0, 0, saveWidth, saveHeight);
+      
+      saveCtx.drawImage(
+        canvasData.offscreenCanvas,
+        bounds.minX - padding,
+        bounds.minY - padding,
+        saveWidth,
+        saveHeight,
+        0,
+        0,
+        saveWidth,
+        saveHeight
+      );
+      
+      const dataURL = saveCanvas.toDataURL('image/png');
       localStorage.setItem('hexo-canvas-' + canvasId, dataURL);
       
       const state = canvasData.getState();
       localStorage.setItem('hexo-canvas-state-' + canvasId, JSON.stringify(state));
-      
-      canvasData.setCameraState(camera.x, camera.y, camera.zoom);
       
       showStatus(canvasId, '保存成功！', 'success');
       return true;
@@ -415,6 +752,40 @@
       showStatus(canvasId, '保存失败：' + e.message, 'error');
       return false;
     }
+  }
+  
+  function getContentBoundsForCanvas(canvasId) {
+    const canvasData = canvases[canvasId];
+    if (!canvasData) {
+      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+    }
+    
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+    
+    const offscreenCanvas = canvasData.offscreenCanvas;
+    const offscreenCtx = canvasData.offscreenCtx;
+    
+    const imageData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    const data = imageData.data;
+    
+    for (let y = 0; y < offscreenCanvas.height; y++) {
+      for (let x = 0; x < offscreenCanvas.width; x++) {
+        const idx = (y * offscreenCanvas.width + x) * 4;
+        if (data[idx + 3] > 0) {
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
+      }
+    }
+    
+    if (minX === Infinity) {
+      return { minX: 0, minY: 0, maxX: offscreenCanvas.width, maxY: offscreenCanvas.height };
+    }
+    
+    return { minX, minY, maxX, maxY };
   }
   
   function loadCanvas(canvasId) {
@@ -440,13 +811,22 @@
       
       const img = new Image();
       img.onload = function() {
-        const camera = canvasData.getCameraState();
-        canvasData.setCameraState(0, 0, 1);
+        const offscreenCanvas = canvasData.offscreenCanvas;
+        const offscreenCtx = canvasData.offscreenCtx;
         
-        canvasData.ctx.clearRect(0, 0, canvasData.canvas.width, canvasData.canvas.height);
-        canvasData.ctx.drawImage(img, 0, 0);
+        offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
         
-        canvasData.setCameraState(camera.x, camera.y, camera.zoom);
+        const offsetX = Math.max(0, Math.floor((offscreenCanvas.width - img.width) / 2));
+        const offsetY = Math.max(0, Math.floor((offscreenCanvas.height - img.height) / 2));
+        
+        offscreenCtx.drawImage(img, offsetX, offsetY);
+        
+        canvasData.updateContentBounds(offsetX, offsetY);
+        canvasData.updateContentBounds(offsetX + img.width, offsetY + img.height);
+        
+        canvasData.syncToDisplayCanvas();
+        canvasData.updateMinimap();
+        
         showStatus(canvasId, '加载成功！', 'success');
       };
       img.onerror = function() {
@@ -465,12 +845,14 @@
     if (!canvasData) return false;
     
     try {
-      const camera = canvasData.getCameraState();
-      canvasData.setCameraState(0, 0, 1);
+      const offscreenCanvas = canvasData.offscreenCanvas;
+      const offscreenCtx = canvasData.offscreenCtx;
       
-      canvasData.ctx.clearRect(0, 0, canvasData.canvas.width, canvasData.canvas.height);
+      offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
       
-      canvasData.setCameraState(camera.x, camera.y, camera.zoom);
+      canvasData.syncToDisplayCanvas();
+      canvasData.updateMinimap();
+      
       showStatus(canvasId, '画布已清除', '');
       return true;
     } catch (e) {

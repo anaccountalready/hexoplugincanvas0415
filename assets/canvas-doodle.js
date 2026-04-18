@@ -6,7 +6,7 @@
   const MINIMAP_SIZE = 150;
   const MINIMAP_PADDING = 10;
   
-  const WORLD_OFFSET_INITIAL = 4000;
+  const WORLD_OFFSET_INITIAL = -4000;
   const INFINITE_CANVAS_INITIAL_SIZE = 8000;
   
   function initCanvas(canvasId) {

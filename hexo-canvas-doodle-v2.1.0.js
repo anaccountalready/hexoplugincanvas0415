@@ -123,7 +123,7 @@
     }
     
     function syncToDisplayCanvas() {
-      const rect = canvas.getBoundingClientRect();
+      const rect = viewport.getBoundingClientRect();
       const viewportWidth = rect.width;
       const viewportHeight = rect.height;
       
@@ -246,9 +246,9 @@
       minimapCtx.lineWidth = 1;
       minimapCtx.strokeRect(offsetX, offsetY, contentWidth * scale, contentHeight * scale);
       
-      const rect = canvas.getBoundingClientRect();
-      const viewportWidth = rect.width;
-      const viewportHeight = rect.height;
+      const viewportRect = viewport.getBoundingClientRect();
+      const viewportWidth = viewportRect.width;
+      const viewportHeight = viewportRect.height;
       
       const vpMinX = (-cameraX) / cameraZoom;
       const vpMinY = (-cameraY) / cameraZoom;
@@ -308,7 +308,7 @@
       const worldX = (mouseX - offsetX) / scale + bounds.minX;
       const worldY = (mouseY - offsetY) / scale + bounds.minY;
       
-      const viewportRect = canvas.getBoundingClientRect();
+      const viewportRect = viewport.getBoundingClientRect();
       const viewportWidth = viewportRect.width;
       const viewportHeight = viewportRect.height;
       
